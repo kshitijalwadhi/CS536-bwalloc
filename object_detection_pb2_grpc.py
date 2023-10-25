@@ -16,7 +16,7 @@ class DetectorStub(object):
         """
         self.detect = channel.unary_unary(
                 '/object_detection.Detector/detect',
-                request_serializer=object__detection__pb2.Image.SerializeToString,
+                request_serializer=object__detection__pb2.Frame.SerializeToString,
                 response_deserializer=object__detection__pb2.BBoxes.FromString,
                 )
 
@@ -35,7 +35,7 @@ def add_DetectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'detect': grpc.unary_unary_rpc_method_handler(
                     servicer.detect,
-                    request_deserializer=object__detection__pb2.Image.FromString,
+                    request_deserializer=object__detection__pb2.Frame.FromString,
                     response_serializer=object__detection__pb2.BBoxes.SerializeToString,
             ),
     }
@@ -60,7 +60,7 @@ class Detector(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/object_detection.Detector/detect',
-            object__detection__pb2.Image.SerializeToString,
+            object__detection__pb2.Frame.SerializeToString,
             object__detection__pb2.BBoxes.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
