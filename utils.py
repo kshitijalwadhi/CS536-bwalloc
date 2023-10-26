@@ -1,3 +1,5 @@
+# Source: https://github.com/xdshang/real-time-object-detection/blob/master/utils.py
+
 import cv2
 
 def draw_result(img, result, scale=1.0):
