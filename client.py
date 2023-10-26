@@ -4,6 +4,8 @@ from imutils.video import FPS
 import time
 import grpc
 
+import cv2
+
 import object_detection_pb2
 import object_detection_pb2_grpc
 
@@ -14,6 +16,26 @@ def send_video(server_address, client_fps, client_packet_drop_rate):
     #vs = VideoStream(src=0).start()
     time.sleep(1.0)
     fps = FPS().start()
+    cap = cv2.VideoCapture('some_video.mp4') #TODO: CHANGE THIS
+    if (cap.isOpened()== False): 
+        print("Error opening video stream or file")
+
+    while(cap.isOpened()):
+
+        ret, frame = cap.read()
+        if ret == True:
+
+            cv2.imshow('Video Frame', frame)
+            fps.update()
+            wait_time = int(1000/fps)
+            if cv2.waitKey(wait_time) & 0xFF == ord('q'):
+                break
+
+        else: 
+            break
+    cap.release()
+    fps.stop()
+
     pass
 
 def get_args() -> argparse.Namespace:
