@@ -20,6 +20,7 @@ def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bandwidth Allocation for Multi-Stream Video")
     parser.add_argument('--server', 
         default='some-server:50051', 
+        required=True,
         help='Server url:port'
     )
     parser.add_argument(
@@ -27,7 +28,6 @@ def get_args() -> argparse.Namespace:
         type=int,
         required=False,
         help="Frame Rate for Client",
-        metavar="",
         default=30
     )
     parser.add_argument(
@@ -35,7 +35,6 @@ def get_args() -> argparse.Namespace:
         type=int,
         required=False,
         help="Packet Drop Rate for Client",
-        metavar="",
         default=0
     )
 
