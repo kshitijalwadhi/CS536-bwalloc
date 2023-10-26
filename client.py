@@ -16,10 +16,11 @@ def get_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "packet_drop_rate",
-        type=str,
+        type=int,
         required=False,
         help="Packet Drop Rate for Client",
         metavar="",
+        default=0
     )
 
 if __name__ == "__main__":
