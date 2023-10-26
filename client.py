@@ -47,7 +47,7 @@ def send_video(server_address, client_fps, client_packet_drop_rate):
             result = pickle.loads(response.data)
             display = draw_result(img, result, scale=float(img.shape[0])/size)
             cv2.imshow('Video Frame', display)
-            wait_time = int(1000/fps)
+            wait_time = int(1000/client_fps)
             cv2.waitKey(wait_time)
             fps.update()
     except grpc._channel._Rendezvous as err:
