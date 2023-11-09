@@ -10,8 +10,6 @@ import threading
 
 from ..server import Detector
 
-_ONE_DAY_IN_SECONDS = 60 * 60 * 24
-
 from ..utils.constants import MAX_CAMERAS
 
 class FCFSQueue:
@@ -33,10 +31,7 @@ class FCFSQueue:
     def handle_request(self, detector, request, context):
         jpg = pickle.loads(request.jpeg_data)
         img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
-        if detector:
-            result = detector.detect(img)
-        else:
-            result = 'Debug Info'
+        result = detector.detect(img)
         return object_detection_pb2.BBoxes(data=pickle.dumps(result))
 
 class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
@@ -55,10 +50,9 @@ def serve(detector):
     server.start()
     try:
         while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
+            time.sleep(60 * 60 * 24)
     except KeyboardInterrupt:
         server.stop(0)
-
     pass
 
 if __name__ == '__main__':
