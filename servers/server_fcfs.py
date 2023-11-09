@@ -8,11 +8,11 @@ import object_detection_pb2_grpc
 from queue import Queue
 import threading
 
-from server import Detector
+from ..server import Detector
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
-from utils.constants import MAX_CAMERAS
+from ..utils.constants import MAX_CAMERAS
 
 class FCFSQueue:
     def __init__(self):
