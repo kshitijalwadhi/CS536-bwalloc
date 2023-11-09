@@ -8,7 +8,7 @@ import time
 import cv2
 import pickle
 
-from constants import MAX_CAMERAS
+from utils.constants import MAX_CAMERAS
 
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
