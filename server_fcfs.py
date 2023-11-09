@@ -12,9 +12,7 @@ from server import Detector
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
-from constants import MAX_CAMERAS
-
-# Assuming 'Detector' class is defined as in the initial server code
+from utils.constants import MAX_CAMERAS
 
 class FCFSQueue:
     def __init__(self):
@@ -28,16 +26,11 @@ class FCFSQueue:
 
     def process_queue(self):
         while True:
-            # Get the next item from the queue
             detector, request, context = self.queue.get()
-            # Process the request
             self.handle_request(detector, request, context)
-            # Mark the processed item as done
             self.queue.task_done()
 
     def handle_request(self, detector, request, context):
-        # The logic to handle the request and return the result
-        # For example, you could decode the image, run the detection, and return the result
         jpg = pickle.loads(request.jpeg_data)
         img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
         if detector:
@@ -52,7 +45,6 @@ class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
         self.fcfs_queue = FCFSQueue()
     
     def detect(self, request, context):
-        # Instead of processing the request immediately, we enqueue it
         self.fcfs_queue.enqueue((self.detector, request, context))
         return object_detection_pb2.BBoxes(data=pickle.dumps('Request enqueued'))
 
