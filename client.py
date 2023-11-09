@@ -11,7 +11,7 @@ import cv2
 import object_detection_pb2
 import object_detection_pb2_grpc
 
-from utils import draw_result
+from utils.utils import draw_result
 
 def webcam(vs, mirror=False):
     while True:
