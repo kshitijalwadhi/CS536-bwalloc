@@ -31,7 +31,7 @@ def send_video(server_address, client_fps, client_packet_drop_rate):
     print("Sending video")
     channel = grpc.insecure_channel(server_address)
     stub = object_detection_pb2_grpc.DetectorStub(channel)
-    #vs = VideoStream(src=0).start()
+    
     time.sleep(1.0)
     fps = FPS().start()
     vs = FileVideoStream('some_video.mp4').start() #TODO: CHANGE THIS
