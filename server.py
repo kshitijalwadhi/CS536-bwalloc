@@ -8,7 +8,7 @@ import time
 import cv2
 import pickle
 
-MAX_WORKERS = 10
+MAX_CAMERAS = 10
 
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
@@ -27,7 +27,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
 
 def serve(detector):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_CAMERAS))
     object_detection_pb2_grpc.add_DetectorServicer_to_server(detector, server)
     server.add_insecure_port("[::]:50051")
     server.start()
