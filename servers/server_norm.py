@@ -1,5 +1,6 @@
 from concurrent import futures
 import time
+import cv2
 import pickle
 import grpc
 import object_detection_pb2
@@ -10,6 +11,39 @@ from ..server import Detector
 from .server_fcfs import FCFSQueue
 
 from ..utils.constants import MAX_CAMERAS, MAX_POSSIBLE_ALLOC
+
+from queue import PriorityQueue
+import threading
+
+class PriorityStreamQueue:
+    def __init__(self):
+        self.queue = PriorityQueue()
+        self.thread = threading.Thread(target=self.process_queue)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def enqueue(self, item, priority):
+        # Use negative priority because PriorityQueue is a min-heap
+        self.queue.put((-priority, item))
+
+    def process_queue(self):
+        while True:
+            # Get the next item from the queue
+            _, (detector, request, context, stream_info) = self.queue.get()
+
+            # Process the request
+            self.handle_request(detector, request, context, stream_info)
+
+            # Mark the processed item as done
+            self.queue.task_done()
+
+    def handle_request(self, detector, request, context, stream_info):
+        # The logic to handle the request and return the result
+        # Placeholder for actual processing logic
+        jpg = pickle.loads(request.jpeg_data)
+        img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
+        result = detector.detect(img)
+        return object_detection_pb2.BBoxes(data=pickle.dumps(result))
 
 class StreamInfo:
     def __init__(self, id, incoming_fps, max_fps):
@@ -23,19 +57,20 @@ class StreamInfo:
 class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
     def __init__(self, detector=None, max_fps=30):
         self.detector = detector
-        self.fcfs_queue = FCFSQueue()
+        self.priority_queue = PriorityStreamQueue()
         self.streams = {}
         self.max_fps = max_fps
 
     def detect(self, request, context):
-        stream_id = request.stream_id 
+        stream_id = request.stream_id
         incoming_fps = request.incoming_fps
         if stream_id not in self.streams:
             self.streams[stream_id] = StreamInfo(stream_id, incoming_fps, self.max_fps)
         
-        # Enqueue with stream information
-        self.fcfs_queue.enqueue((self.detector, request, context, self.streams[stream_id]))
+        stream_info = self.streams[stream_id]
+        self.priority_queue.enqueue((self.detector, request, context, stream_info), stream_info.resource_allocation)
         return object_detection_pb2.BBoxes(data=pickle.dumps('Request enqueued'))
+
 
 def serve(detector):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_CAMERAS))
