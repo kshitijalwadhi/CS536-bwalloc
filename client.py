@@ -27,7 +27,7 @@ def webcam(vs, mirror=False):
             img = img[pad: pad+img.shape[1], :]
         yield img
 
-def send_video(server_address, client_fps, client_packet_drop_rate):
+def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
     print("Sending video")
     channel = grpc.insecure_channel(server_address)
     stub = object_detection_pb2_grpc.DetectorStub(channel)
@@ -42,7 +42,7 @@ def send_video(server_address, client_fps, client_packet_drop_rate):
             resized_img = cv2.resize(img, (size, size))
             jpg = cv2.imencode('.jpg', resized_img)[1]
             # send to server for object detection
-            response = stub.detect(object_detection_pb2.Image(jpeg_data=pickle.dumps(jpg)))
+            response = stub.detect(object_detection_pb2.Image(jpeg_data=pickle.dumps(jpg)), client_id=client_id)
             # parse detection result and draw on the frame
             result = pickle.loads(response.data)
             display = draw_result(img, result, scale=float(img.shape[0])/size)
@@ -67,6 +67,13 @@ def get_args() -> argparse.Namespace:
         help='Server url:port'
     )
     parser.add_argument(
+        "--id",
+        type=int,
+        required=True,
+        help="Unique Client ID",
+        default=30
+    )
+    parser.add_argument(
         "fps",
         type=int,
         required=False,
@@ -84,6 +91,7 @@ def get_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = get_args()
     server_address = args.server
+    client_id = args.id
     client_fps = args.fps
     client_packet_drop_rate = args.packet_drop_rate
-    send_video(server_address, client_fps, client_packet_drop_rate)
+    send_video(server_address, client_fps, client_packet_drop_rate, client_id)

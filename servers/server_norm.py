@@ -23,23 +23,15 @@ class PriorityStreamQueue:
         self.thread.start()
 
     def enqueue(self, item, priority):
-        # Use negative priority because PriorityQueue is a min-heap
         self.queue.put((-priority, item))
 
     def process_queue(self):
         while True:
-            # Get the next item from the queue
             _, (detector, request, context, stream_info) = self.queue.get()
-
-            # Process the request
             self.handle_request(detector, request, context, stream_info)
-
-            # Mark the processed item as done
             self.queue.task_done()
 
-    def handle_request(self, detector, request, context, stream_info):
-        # The logic to handle the request and return the result
-        # Placeholder for actual processing logic
+    def handle_request(self, detector, request, context):
         jpg = pickle.loads(request.jpeg_data)
         img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
         result = detector.detect(img)
@@ -62,12 +54,12 @@ class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
         self.max_fps = max_fps
 
     def detect(self, request, context):
-        stream_id = request.stream_id
+        client_id = request.client_id
         incoming_fps = request.incoming_fps
-        if stream_id not in self.streams:
-            self.streams[stream_id] = StreamInfo(stream_id, incoming_fps, self.max_fps)
+        if client_id not in self.streams:
+            self.streams[client_id] = StreamInfo(client_id, incoming_fps, self.max_fps)
         
-        stream_info = self.streams[stream_id]
+        stream_info = self.streams[client_id]
         self.priority_queue.enqueue((self.detector, request, context, stream_info), stream_info.resource_allocation)
         return object_detection_pb2.BBoxes(data=pickle.dumps('Request enqueued'))
 
