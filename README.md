@@ -1,5 +1,9 @@
 # CS526-bwalloc
 
+## Servers available:
+1. FCFS Server
+2. Priority Queue with Normalization Factor. Queue ordered in descending order.
+3. Priority Queue with Normalization Factor. Queue ordered in ascending order.
 
 ## To compile the grpc proto:
 
