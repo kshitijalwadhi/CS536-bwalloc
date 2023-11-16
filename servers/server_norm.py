@@ -44,6 +44,7 @@ class StreamInfo:
         self.resource_allocation = self.calculate_resource_allocation()
 
     def calculate_resource_allocation(self):
+        # TODO: Need to change this to actual resource allocation
         return MAX_POSSIBLE_ALLOC * self.norm_factor
 
 class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
