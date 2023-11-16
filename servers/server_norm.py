@@ -8,7 +8,6 @@ import object_detection_pb2_grpc
 
 
 from ..server import Detector
-from .server_fcfs import FCFSQueue
 
 from ..utils.constants import MAX_CAMERAS, MAX_POSSIBLE_ALLOC
 

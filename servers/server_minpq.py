@@ -1,6 +1,5 @@
 from concurrent import futures
 import time
-import cv2
 import pickle
 import grpc
 import object_detection_pb2

@@ -1,5 +1,4 @@
 import argparse
-
 from imutils.video import FPS
 from imutils.video import FileVideoStream
 import time
