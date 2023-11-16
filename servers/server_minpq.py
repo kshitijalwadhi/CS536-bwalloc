@@ -7,10 +7,15 @@ import object_detection_pb2_grpc
 
 
 from ..server import Detector
-from .server_norm import PriorityStreamQueue, StreamInfo
+from .server_norm import PriorityStreamQueue
 
 from ..utils.constants import MAX_CAMERAS
 
+
+class StreamInfo:
+    def __init__(self, id, incoming_fps, max_fps):
+        self.id = id
+        self.incoming_fps = incoming_fps
 
 class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
     def __init__(self, detector=None, max_fps=30):
@@ -26,7 +31,7 @@ class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
             self.streams[client_id] = StreamInfo(client_id, incoming_fps, self.max_fps)
         
         stream_info = self.streams[client_id]
-        self.priority_queue.enqueue((self.detector, request, context, stream_info), -1*stream_info.resource_allocation)
+        self.priority_queue.enqueue((self.detector, request, context, stream_info), -1*stream_info.incoming_fps)
         return object_detection_pb2.BBoxes(data=pickle.dumps('Request enqueued'))
 
 
