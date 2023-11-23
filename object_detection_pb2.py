@@ -13,17 +13,19 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"\x1b\n\x05\x46rame\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x32I\n\x08\x44\x65tector\x12=\n\x06\x64\x65tect\x12\x17.object_detection.Frame\x1a\x18.object_detection.BBoxes\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"D\n\x08Response\x12(\n\x06\x62\x62oxes\x18\x01 \x01(\x0b\x32\x18.object_detection.BBoxes\x12\x0e\n\x06signal\x18\x02 \x01(\x05\"(\n\x05\x46rame\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x32K\n\x08\x44\x65tector\x12?\n\x06\x64\x65tect\x12\x17.object_detection.Frame\x1a\x1a.object_detection.Response\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'object_detection_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_FRAME']._serialized_start=44
-  _globals['_FRAME']._serialized_end=71
-  _globals['_BBOXES']._serialized_start=73
-  _globals['_BBOXES']._serialized_end=95
-  _globals['_DETECTOR']._serialized_start=97
-  _globals['_DETECTOR']._serialized_end=170
+  _globals['_RESPONSE']._serialized_start=44
+  _globals['_RESPONSE']._serialized_end=112
+  _globals['_FRAME']._serialized_start=114
+  _globals['_FRAME']._serialized_end=154
+  _globals['_BBOXES']._serialized_start=156
+  _globals['_BBOXES']._serialized_end=178
+  _globals['_DETECTOR']._serialized_start=180
+  _globals['_DETECTOR']._serialized_end=255
 # @@protoc_insertion_point(module_scope)
