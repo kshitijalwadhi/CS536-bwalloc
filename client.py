@@ -41,7 +41,11 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
             resized_img = cv2.resize(img, (size, size))
             jpg = cv2.imencode('.jpg', resized_img)[1]
             # send to server for object detection
-            response = stub.detect(object_detection_pb2.Image(jpeg_data=pickle.dumps(jpg)), client_id=client_id)
+            response = stub.detect(object_detection_pb2.Image(
+                jpeg_data=pickle.dumps(jpg)), 
+                client_id=client_id, 
+                client_fps=client_fps
+            )
             # parse detection result and draw on the frame
             result = pickle.loads(response.data)
             display = draw_result(img, result, scale=float(img.shape[0])/size)

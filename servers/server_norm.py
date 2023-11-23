@@ -37,9 +37,9 @@ class PriorityStreamQueue:
         return object_detection_pb2.BBoxes(data=pickle.dumps(result))
 
 class StreamInfo:
-    def __init__(self, id, incoming_fps, max_fps):
+    def __init__(self, id, client_fps, max_fps):
         self.id = id
-        self.norm_factor = incoming_fps / max_fps
+        self.norm_factor = client_fps / max_fps
         self.resource_allocation = self.calculate_resource_allocation()
 
     def calculate_resource_allocation(self):
@@ -55,9 +55,9 @@ class DetectorServicer(object_detection_pb2_grpc.DetectorServicer):
 
     def detect(self, request, context):
         client_id = request.client_id
-        incoming_fps = request.incoming_fps
+        client_fps = request.client_fps
         if client_id not in self.streams:
-            self.streams[client_id] = StreamInfo(client_id, incoming_fps, self.max_fps)
+            self.streams[client_id] = StreamInfo(client_id, client_fps, self.max_fps)
         
         stream_info = self.streams[client_id]
         self.priority_queue.enqueue((self.detector, request, context, stream_info), stream_info.resource_allocation)
