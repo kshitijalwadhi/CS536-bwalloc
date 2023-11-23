@@ -3,7 +3,7 @@ syntax = "proto3";
 package object_detection;
 
 service Detector {
-    rpc detect (Frame) returns (Response) {}
+    rpc detect (Request) returns (Response) {}
 }
 
 message Response {
@@ -11,7 +11,7 @@ message Response {
     int32 signal = 2;
 }
 
-message Frame {
+message Request {
     bytes frame_data = 1;
     int32 fps = 2;
 }

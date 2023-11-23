@@ -1,7 +1,8 @@
 import grpc
 
-import object_detection_pb2
 import object_detection_pb2_grpc
+
+from object_detection_pb2 import Request, Response, BBoxes
 
 from concurrent import futures
 import time
@@ -11,19 +12,29 @@ import pickle
 from utils.constants import MAX_CAMERAS
 
 
+class ObjectDetector:
+    def detect(self, frame) -> BBoxes:
+        dummy_output = []
+        res = BBoxes(data=pickle.dumps(dummy_output))
+        return res
+
 class Detector(object_detection_pb2_grpc.DetectorServicer):
     def __init__(self, detector=None) -> None:
         super(Detector, self).__init__()
         self.detector = detector
 
-    def detect(self, request, context):
-        frame = pickle.loads(request.frame)
+    def detect(self, request:Request, context):
+        frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
-        res = self.detector.detect(frame)
-        return object_detection_pb2.BBoxes(data=pickle.dumps(res))
+        bboxes = self.detector.detect(frame)
 
-    pass
+        res = Response(
+            bboxes=bboxes,
+            signal=0
+        )
+
+        return res
 
 
 def serve(detector):
@@ -40,4 +51,4 @@ def serve(detector):
 
 
 if __name__ == "__main__":
-    serve(Detector())
+    serve(Detector(detector=ObjectDetector()))

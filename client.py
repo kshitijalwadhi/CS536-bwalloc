@@ -10,6 +10,8 @@ import cv2
 import object_detection_pb2
 import object_detection_pb2_grpc
 
+from object_detection_pb2 import Request, Response, BBoxes
+
 from utils.utils import draw_result
 
 def webcam(vs, mirror=False):
@@ -62,34 +64,58 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
         cv2.destroyAllWindows()
         vs.stop()
 
+def testing_send_frame(server_address, client_fps, client_packet_drop_rate, client_id):
+    print("Initializing client")
+    channel = grpc.insecure_channel(server_address)
+    stub = object_detection_pb2_grpc.DetectorStub(channel)
+
+    try:
+        img = cv2.imread('frame.png')
+        resized_img = cv2.resize(img, (224, 224))
+        png = cv2.imencode('.png', resized_img)[1]
+
+        print("Sending frame")
+
+        req = Request(
+            frame_data = pickle.dumps(png),
+            fps = client_fps,
+        )
+        resp = stub.detect(req)
+
+        print("Received response")
+
+        assert resp.signal == 0
+        assert resp.bboxes.data == pickle.dumps([])
+    
+    except grpc._channel._Rendezvous as err:
+        print(err)
+
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bandwidth Allocation for Multi-Stream Video")
     parser.add_argument('--server', 
-        default='some-server:50051', 
-        required=True,
+        default='localhost:50051', 
         help='Server url:port'
     )
     parser.add_argument(
         "--id",
         type=int,
-        required=True,
         help="Unique Client ID",
         default=30
     )
     parser.add_argument(
-        "fps",
+        "--fps",
         type=int,
-        required=False,
         help="Frame Rate for Client",
         default=30
     )
     parser.add_argument(
-        "packet_drop_rate",
+        "--packet_drop_rate",
         type=int,
-        required=False,
         help="Packet Drop Rate for Client",
         default=0
     )
+    return parser.parse_args()
 
 if __name__ == "__main__":
     args = get_args()
@@ -97,4 +123,5 @@ if __name__ == "__main__":
     client_id = args.id
     client_fps = args.fps
     client_packet_drop_rate = args.packet_drop_rate
-    send_video(server_address, client_fps, client_packet_drop_rate, client_id)
+    # send_video(server_address, client_fps, client_packet_drop_rate, client_id)
+    testing_send_frame(server_address, client_fps, client_packet_drop_rate, client_id)
