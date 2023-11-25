@@ -7,7 +7,6 @@ import pickle
 
 import cv2
 
-import object_detection_pb2
 import object_detection_pb2_grpc
 
 from object_detection_pb2 import Request, Response, BBoxes

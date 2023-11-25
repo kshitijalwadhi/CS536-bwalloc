@@ -12,9 +12,18 @@ import pickle
 from utils.constants import MAX_CAMERAS
 from time import sleep
 
+import random
+
+IMG_SIZE = 224
+
 class ObjectDetector:
     def detect(self, frame) -> BBoxes:
         dummy_output = []
+
+        for _ in range(random.randint(1, 5)):
+            dummy_output.append(
+                ['rectangle', random.randint(0, 224), random.randint(0, 224), random.randint(10, 50), random.randint(10, 50), random.random()]
+            )
         res = BBoxes(data=pickle.dumps(dummy_output))
         return res
 
