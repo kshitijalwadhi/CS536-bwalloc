@@ -16,6 +16,8 @@ from utils.utils import draw_result
 def yield_frames_from_video(vs, mirror=False):
     while True:
         img = vs.read()
+        if img is None:
+            break
         if mirror: 
             img = cv2.flip(img, 1)
         # crop image to square as YOLO input
@@ -42,9 +44,6 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
             resized_img = cv2.resize(img, (size, size))
             jpg = cv2.imencode('.jpg', resized_img)[1]
             # send to server for object detection
-
-            print("Sending frame")
-
             req = Request(
                 frame_data = pickle.dumps(jpg),
                 fps = client_fps,
