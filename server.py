@@ -22,7 +22,7 @@ class ObjectDetector:
 
         for _ in range(random.randint(1, 5)):
             dummy_output.append(
-                ['rectangle', random.randint(0, 224), random.randint(0, 224), random.randint(10, 50), random.randint(10, 50), random.random()]
+                ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
             )
         res = BBoxes(data=pickle.dumps(dummy_output))
         return res
@@ -35,6 +35,8 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
     def detect(self, request:Request, context):
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+
+        frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
 
         bboxes = self.detector.detect(frame)
 

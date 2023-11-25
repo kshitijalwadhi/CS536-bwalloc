@@ -38,10 +38,12 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
     fps = FPS().start()
     vs = FileVideoStream('sample.mp4').start()
     size = 224
+    scaling_factor = 2
     try:
         for img in yield_frames_from_video(vs, mirror=True):
             # compress frame
-            resized_img = cv2.resize(img, (size, size))
+            # resized_img = cv2.resize(img, (size, size))
+            resized_img = cv2.resize(img, (size//scaling_factor, size//scaling_factor))
             jpg = cv2.imencode('.jpg', resized_img)[1]
             # send to server for object detection
             req = Request(
