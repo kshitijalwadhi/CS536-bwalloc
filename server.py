@@ -10,7 +10,7 @@ import cv2
 import pickle
 
 from utils.constants import MAX_CAMERAS
-
+from time import sleep
 
 class ObjectDetector:
     def detect(self, frame) -> BBoxes:
@@ -33,7 +33,6 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             bboxes=bboxes,
             signal=0
         )
-
         return res
 
 

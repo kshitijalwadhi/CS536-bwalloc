@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"D\n\x08Response\x12(\n\x06\x62\x62oxes\x18\x01 \x01(\x0b\x32\x18.object_detection.BBoxes\x12\x0e\n\x06signal\x18\x02 \x01(\x05\"*\n\x07Request\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x32M\n\x08\x44\x65tector\x12\x41\n\x06\x64\x65tect\x12\x19.object_detection.Request\x1a\x1a.object_detection.Response\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"D\n\x08Response\x12(\n\x06\x62\x62oxes\x18\x01 \x01(\x0b\x32\x18.object_detection.BBoxes\x12\x0e\n\x06signal\x18\x02 \x01(\x05\"=\n\x07Request\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\x12\x11\n\tclient_id\x18\x03 \x01(\x05\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x32M\n\x08\x44\x65tector\x12\x41\n\x06\x64\x65tect\x12\x19.object_detection.Request\x1a\x1a.object_detection.Response\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,9 +23,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_RESPONSE']._serialized_start=44
   _globals['_RESPONSE']._serialized_end=112
   _globals['_REQUEST']._serialized_start=114
-  _globals['_REQUEST']._serialized_end=156
-  _globals['_BBOXES']._serialized_start=158
-  _globals['_BBOXES']._serialized_end=180
-  _globals['_DETECTOR']._serialized_start=182
-  _globals['_DETECTOR']._serialized_end=259
+  _globals['_REQUEST']._serialized_end=175
+  _globals['_BBOXES']._serialized_start=177
+  _globals['_BBOXES']._serialized_end=199
+  _globals['_DETECTOR']._serialized_start=201
+  _globals['_DETECTOR']._serialized_end=278
 # @@protoc_insertion_point(module_scope)

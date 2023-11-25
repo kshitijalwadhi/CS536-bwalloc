@@ -14,7 +14,7 @@ from object_detection_pb2 import Request, Response, BBoxes
 
 from utils.utils import draw_result
 
-def webcam(vs, mirror=False):
+def yield_frames_from_video(vs, mirror=False):
     while True:
         img = vs.read()
         if mirror: 
@@ -29,27 +29,33 @@ def webcam(vs, mirror=False):
         yield img
 
 def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
-    print("Sending video")
+    print("Initializing client")
     channel = grpc.insecure_channel(server_address)
     stub = object_detection_pb2_grpc.DetectorStub(channel)
     
     time.sleep(1.0)
     fps = FPS().start()
-    vs = FileVideoStream('some_video.mp4').start() #TODO: CHANGE THIS
+    vs = FileVideoStream('sample.mp4').start()
     size = 224
     try:
-        for img in webcam(vs, mirror=True):
+        for img in yield_frames_from_video(vs, mirror=True):
             # compress frame
             resized_img = cv2.resize(img, (size, size))
             jpg = cv2.imencode('.jpg', resized_img)[1]
             # send to server for object detection
-            response = stub.detect(object_detection_pb2.Image(
-                jpeg_data=pickle.dumps(jpg)), 
-                client_id=client_id, 
-                client_fps=client_fps
+
+            print("Sending frame")
+
+            req = Request(
+                frame_data = pickle.dumps(jpg),
+                fps = client_fps,
+                client_id = client_id,
             )
+
+            resp = stub.detect(req)
+            
             # parse detection result and draw on the frame
-            result = pickle.loads(response.data)
+            result = pickle.loads(resp.bboxes.data)
             display = draw_result(img, result, scale=float(img.shape[0])/size)
             cv2.imshow('Video Frame', display)
             wait_time = int(1000/client_fps)
@@ -63,32 +69,6 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
         print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
         cv2.destroyAllWindows()
         vs.stop()
-
-def testing_send_frame(server_address, client_fps, client_packet_drop_rate, client_id):
-    print("Initializing client")
-    channel = grpc.insecure_channel(server_address)
-    stub = object_detection_pb2_grpc.DetectorStub(channel)
-
-    try:
-        img = cv2.imread('frame.png')
-        resized_img = cv2.resize(img, (224, 224))
-        png = cv2.imencode('.png', resized_img)[1]
-
-        print("Sending frame")
-
-        req = Request(
-            frame_data = pickle.dumps(png),
-            fps = client_fps,
-        )
-        resp = stub.detect(req)
-
-        print("Received response")
-
-        assert resp.signal == 0
-        assert resp.bboxes.data == pickle.dumps([])
-    
-    except grpc._channel._Rendezvous as err:
-        print(err)
 
 
 def get_args() -> argparse.Namespace:
@@ -123,5 +103,4 @@ if __name__ == "__main__":
     client_id = args.id
     client_fps = args.fps
     client_packet_drop_rate = args.packet_drop_rate
-    # send_video(server_address, client_fps, client_packet_drop_rate, client_id)
-    testing_send_frame(server_address, client_fps, client_packet_drop_rate, client_id)
+    send_video(server_address, client_fps, client_packet_drop_rate, client_id)
