@@ -3,20 +3,18 @@ syntax = "proto3";
 package object_detection;
 
 service Detector {
-    rpc detect (Request) returns (Response) {}
+  rpc detect(Request) returns (Response) {}
 }
 
 message Response {
-    BBoxes bboxes = 1;
-    int32 signal = 2;
+  BBoxes bboxes = 1;
+  int32 signal = 2;
 }
 
 message Request {
-    bytes frame_data = 1;
-    int32 fps = 2;
-    int32 client_id = 3;
+  bytes frame_data = 1;
+  int32 fps = 2;
+  int32 client_id = 3;
 }
 
-message BBoxes {
-    bytes data = 1;
-}
+message BBoxes { bytes data = 1; }
