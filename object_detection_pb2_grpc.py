@@ -19,12 +19,34 @@ class DetectorStub(object):
                 request_serializer=object__detection__pb2.Request.SerializeToString,
                 response_deserializer=object__detection__pb2.Response.FromString,
                 )
+        self.init_client = channel.unary_unary(
+                '/object_detection.Detector/init_client',
+                request_serializer=object__detection__pb2.InitRequest.SerializeToString,
+                response_deserializer=object__detection__pb2.InitResponse.FromString,
+                )
+        self.close_connection = channel.unary_unary(
+                '/object_detection.Detector/close_connection',
+                request_serializer=object__detection__pb2.CloseRequest.SerializeToString,
+                response_deserializer=object__detection__pb2.CloseResponse.FromString,
+                )
 
 
 class DetectorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def detect(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def init_client(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def close_connection(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -37,6 +59,16 @@ def add_DetectorServicer_to_server(servicer, server):
                     servicer.detect,
                     request_deserializer=object__detection__pb2.Request.FromString,
                     response_serializer=object__detection__pb2.Response.SerializeToString,
+            ),
+            'init_client': grpc.unary_unary_rpc_method_handler(
+                    servicer.init_client,
+                    request_deserializer=object__detection__pb2.InitRequest.FromString,
+                    response_serializer=object__detection__pb2.InitResponse.SerializeToString,
+            ),
+            'close_connection': grpc.unary_unary_rpc_method_handler(
+                    servicer.close_connection,
+                    request_deserializer=object__detection__pb2.CloseRequest.FromString,
+                    response_serializer=object__detection__pb2.CloseResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -62,5 +94,39 @@ class Detector(object):
         return grpc.experimental.unary_unary(request, target, '/object_detection.Detector/detect',
             object__detection__pb2.Request.SerializeToString,
             object__detection__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def init_client(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/object_detection.Detector/init_client',
+            object__detection__pb2.InitRequest.SerializeToString,
+            object__detection__pb2.InitResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def close_connection(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/object_detection.Detector/close_connection',
+            object__detection__pb2.CloseRequest.SerializeToString,
+            object__detection__pb2.CloseResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

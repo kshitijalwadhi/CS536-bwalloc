@@ -2,7 +2,7 @@ import grpc
 
 import object_detection_pb2_grpc
 
-from object_detection_pb2 import Request, Response, BBoxes
+from object_detection_pb2 import Request, Response, BBoxes, InitRequest, InitResponse, CloseRequest, CloseResponse
 
 from concurrent import futures
 import time
@@ -38,6 +38,26 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         self.current_load = 0
         self.current_num_clients = 0
         self.lock = Lock()
+        self.connected_clients = {}
+
+    def init_client(self, request: InitRequest, context):
+        with self.lock:
+            client_id = random.randint(1, MAX_CAMERAS)
+            while client_id in self.connected_clients:
+                client_id = random.randint(1, MAX_CAMERAS)
+            self.connected_clients[client_id] = {
+                "fps": 0,
+                "size_each_frame": 0,
+            }
+        return InitResponse(
+            client_id=client_id,
+        )
+
+    def close_connection(self, request: CloseRequest, context):
+        with self.lock:
+            if request.client_id in self.connected_clients:
+                del self.connected_clients[request.client_id]
+        return CloseResponse()
 
     def detect(self, request: Request, context):
         with self.lock:

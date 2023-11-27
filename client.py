@@ -9,7 +9,7 @@ import cv2
 
 import object_detection_pb2_grpc
 
-from object_detection_pb2 import Request, Response, BBoxes
+from object_detection_pb2 import Request, Response, BBoxes, InitRequest, InitResponse, CloseRequest, CloseResponse
 
 from utils.utils import draw_result
 
@@ -31,8 +31,16 @@ def yield_frames_from_video(vs, mirror=False):
         yield img
 
 
-def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
-    print("Initializing client")
+def send_init_request(server_address):
+    channel = grpc.insecure_channel(server_address)
+    stub = object_detection_pb2_grpc.DetectorStub(channel)
+    req = InitRequest()
+    resp = stub.init_client(req)
+    return resp.client_id
+
+
+def send_video(server_address, client_fps, client_id):
+    print("Sending video to server")
     channel = grpc.insecure_channel(server_address)
     stub = object_detection_pb2_grpc.DetectorStub(channel)
 
@@ -73,6 +81,16 @@ def send_video(server_address, client_fps, client_packet_drop_rate, client_id):
         vs.stop()
 
 
+def close_connection(server_address, client_id):
+    channel = grpc.insecure_channel(server_address)
+    stub = object_detection_pb2_grpc.DetectorStub(channel)
+    req = CloseRequest(
+        client_id=client_id,
+    )
+    resp = stub.close_connection(req)
+    return resp
+
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bandwidth Allocation for Multi-Stream Video")
     parser.add_argument('--server',
@@ -80,22 +98,10 @@ def get_args() -> argparse.Namespace:
                         help='Server url:port'
                         )
     parser.add_argument(
-        "--id",
-        type=int,
-        help="Unique Client ID",
-        default=30
-    )
-    parser.add_argument(
         "--fps",
         type=int,
         help="Frame Rate for Client",
         default=30
-    )
-    parser.add_argument(
-        "--packet_drop_rate",
-        type=int,
-        help="Packet Drop Rate for Client",
-        default=0
     )
     return parser.parse_args()
 
@@ -103,7 +109,12 @@ def get_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = get_args()
     server_address = args.server
-    client_id = args.id
     client_fps = args.fps
-    client_packet_drop_rate = args.packet_drop_rate
-    send_video(server_address, client_fps, client_packet_drop_rate, client_id)
+
+    client_id = send_init_request(server_address)
+    print("Client ID: {}".format(client_id))
+
+    send_video(server_address, client_fps, client_id)
+
+    print("Closing connection")
+    close_connection(server_address, client_id)
