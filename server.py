@@ -17,6 +17,7 @@ import random
 from threading import Lock
 
 IMG_SIZE = 224
+BW = 8000
 
 
 class ObjectDetector:
@@ -63,6 +64,11 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         with self.lock:
             self.current_load += len(request.frame_data)
             self.current_num_clients += 1
+            self.connected_clients[request.client_id]["fps"] = request.fps
+            self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
+
+            if self.current_load > BW:
+                print("Server is overloaded")
 
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
