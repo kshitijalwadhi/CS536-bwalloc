@@ -14,7 +14,10 @@ from time import sleep
 
 import random
 
+from threading import Lock
+
 IMG_SIZE = 224
+
 
 class ObjectDetector:
     def detect(self, frame) -> BBoxes:
@@ -27,12 +30,20 @@ class ObjectDetector:
         res = BBoxes(data=pickle.dumps(dummy_output))
         return res
 
+
 class Detector(object_detection_pb2_grpc.DetectorServicer):
     def __init__(self, detector=None) -> None:
         super(Detector, self).__init__()
         self.detector = detector
+        self.current_load = 0
+        self.current_num_clients = 0
+        self.lock = Lock()
 
-    def detect(self, request:Request, context):
+    def detect(self, request: Request, context):
+        with self.lock:
+            self.current_load += len(request.frame_data)
+            self.current_num_clients += 1
+
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
@@ -44,6 +55,10 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             bboxes=bboxes,
             signal=0
         )
+        with self.lock:
+            self.current_load -= len(request.frame_data)
+            self.current_num_clients -= 1
+
         return res
 
 
