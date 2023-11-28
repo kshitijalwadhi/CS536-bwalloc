@@ -16,19 +16,51 @@ import random
 
 from threading import Lock
 
+import torch
+import torchvision
+from PIL import Image
+from torchvision.transforms.functional import pil_to_tensor
+from torchvision.models.detection import fasterrcnn_resnet50_fpn
+
 IMG_SIZE = 224
 BW = 8000
+DUMMY_DETECTOR = 0
+DETECTOR_THRESH = 0.5
 
 
 class ObjectDetector:
-    def detect(self, frame) -> BBoxes:
-        dummy_output = []
+    def __init__(self):
+        self.object_detection_model = fasterrcnn_resnet50_fpn(pretrained=True, progress=False)
+        self.object_detection_model.eval();
 
-        for _ in range(random.randint(1, 5)):
-            dummy_output.append(
-                ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
-            )
-        res = BBoxes(data=pickle.dumps(dummy_output))
+    def detect(self, frame) -> BBoxes:
+        output = []
+
+        if(not DUMMY_DETECTOR):
+            color_converted = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil_image=Image.fromarray(color_converted)
+
+            pil_image = pil_to_tensor(pil_image)
+            pil_image = pil_image.unsqueeze(dim=0)
+            pil_image = pil_image / 255.0
+            pil_image = self.object_detection_model(pil_image)
+            pil_image[0]["boxes"] = pil_image[0]["boxes"][pil_image[0]["labels"] ==1]
+            pil_image[0]["scores"] = pil_image[0]["scores"][pil_image[0]["labels"] ==1]
+            pil_image[0]["labels"] = pil_image[0]["labels"][pil_image[0]["labels"] ==1]
+            pil_image[0]["boxes"] = pil_image[0]["boxes"][pil_image[0]["scores"] > DETECTOR_THRESH].detach().numpy()
+            pil_image[0]["labels"] = pil_image[0]["labels"][pil_image[0]["scores"] > DETECTOR_THRESH].detach().numpy()
+            pil_image[0]["scores"] = pil_image[0]["scores"][pil_image[0]["scores"] > DETECTOR_THRESH].detach().numpy()
+            for i in range(len(pil_image[0]["boxes"])):
+                output.append(['rectangle', pil_image[0]["boxes"][i][0],
+                 pil_image[0]["boxes"][i][1], pil_image[0]["boxes"][i][2],
+                 pil_image[0]["boxes"][i][3], pil_image[0]["scores"][i]])
+        print(len(output))
+        if(DUMMY_DETECTOR or len(output)==0):
+            for _ in range(random.randint(1, 5)):
+                output.append(
+                    ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
+                )
+        res = BBoxes(data=pickle.dumps(output))
         return res
 
 
