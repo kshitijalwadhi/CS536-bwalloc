@@ -46,7 +46,7 @@ def send_video(server_address, client_fps, client_id):
 
     time.sleep(1.0)
     fps = FPS().start()
-    vs = FileVideoStream('../walking_guy_fast.mp4').start()
+    vs = FileVideoStream('walking_guy_fast.mp4').start()
     size = 224
     scaling_factor = 1
     try:
