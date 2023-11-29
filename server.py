@@ -61,6 +61,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         return CloseResponse()
 
     def detect(self, request: Request, context):
+        new_fps = request.fps
         with self.lock:
             self.current_load += len(request.frame_data)
             self.current_num_clients += 1
@@ -69,6 +70,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
             if self.current_load > BW:
                 print("Server is overloaded")
+                new_fps = self.calculate_adjusted_fps(request.client_id)
 
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
@@ -79,13 +81,30 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         res = Response(
             bboxes=bboxes,
-            signal=0
+            signal=new_fps
         )
         with self.lock:
             self.current_load -= len(request.frame_data)
             self.current_num_clients -= 1
 
         return res
+    
+    def calculate_adjusted_fps(self, requesting_client_id):
+        total_fps = 0
+        max_fps = 0
+        max_fps_client_id = None
+
+        for client_id, info in self.connected_clients.items():
+            total_fps += info["fps"]
+            if info["fps"] > max_fps:
+                max_fps = info["fps"]
+                max_fps_client_id = client_id
+
+        if max_fps_client_id == requesting_client_id:
+            return 0
+
+        average_fps = total_fps / len(self.connected_clients)
+        return average_fps if max_fps_client_id is not None else 0
 
 
 def serve(detector):
