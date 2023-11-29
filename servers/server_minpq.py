@@ -42,7 +42,7 @@ def serve(detector):
     server.start()
     try:
         while True:
-            time.sleep(60 * 60 * 24)
+            time.sleep(86400)
     except KeyboardInterrupt:
         server.stop(0)
     pass
