@@ -1,4 +1,4 @@
-# CS526-bwalloc
+# CS536-bwalloc
 
 ## Servers available:
 1. FCFS Server
