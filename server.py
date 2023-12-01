@@ -28,7 +28,7 @@ class ObjectDetector:
         res = BBoxes(data=pickle.dumps(dummy_output))
         if random.random() < 0.8: 
             score = random.uniform(85, 100)
-        else:  # 20% probability
+        else:
             score = random.uniform(0, 85)
         return res, score
 
