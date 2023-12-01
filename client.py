@@ -70,6 +70,7 @@ def send_video(server_address, client_fps, client_id):
             cv2.imshow('Video Frame', display)
 
             client_fps = resp.signal
+            client_fps += 5
             wait_time = int(1000/client_fps)
             cv2.waitKey(wait_time)
             fps.update()
