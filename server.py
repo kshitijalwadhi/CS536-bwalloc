@@ -9,15 +9,12 @@ import time
 import cv2
 import pickle
 
-from utils.constants import MAX_CAMERAS
+from utils.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, BW
 from time import sleep
 
 import random
 
 from threading import Lock
-
-IMG_SIZE = 224
-BW = 8000
 
 
 class ObjectDetector:
@@ -29,7 +26,11 @@ class ObjectDetector:
                 ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
             )
         res = BBoxes(data=pickle.dumps(dummy_output))
-        return res
+        if random.random() < 0.8: 
+            score = random.uniform(85, 100)
+        else:  # 20% probability
+            score = random.uniform(0, 85)
+        return res, score
 
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
@@ -61,7 +62,6 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         return CloseResponse()
 
     def detect(self, request: Request, context):
-        new_fps = request.fps
         with self.lock:
             self.current_load += len(request.frame_data)
             self.current_num_clients += 1
@@ -70,41 +70,26 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
             if self.current_load > BW:
                 print("Server is overloaded")
-                new_fps = self.calculate_adjusted_fps(request.client_id)
 
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
         frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
 
-        bboxes = self.detector.detect(frame)
+        bboxes, score = self.detector.detect(frame)
 
         res = Response(
             bboxes=bboxes,
-            signal=new_fps
+            signal=0
         )
         with self.lock:
+            if score < OD_THRESH:
+                print("Object Detection Score below threshold")
+
             self.current_load -= len(request.frame_data)
             self.current_num_clients -= 1
 
         return res
-    
-    def calculate_adjusted_fps(self, requesting_client_id):
-        total_fps = 0
-        max_fps = 0
-        max_fps_client_id = None
-
-        for client_id, info in self.connected_clients.items():
-            total_fps += info["fps"]
-            if info["fps"] > max_fps:
-                max_fps = info["fps"]
-                max_fps_client_id = client_id
-
-        if max_fps_client_id == requesting_client_id:
-            return 0
-
-        average_fps = total_fps / len(self.connected_clients)
-        return average_fps if max_fps_client_id is not None else 0
 
 
 def serve(detector):
