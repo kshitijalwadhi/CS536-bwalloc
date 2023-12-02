@@ -30,6 +30,7 @@ class ObjectDetector:
             score = random.uniform(85, 100)
         else:
             score = random.uniform(0, 85)
+        print(score)
         return res, score
 
 
@@ -69,15 +70,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             self.current_num_clients += 1
             self.connected_clients[request.client_id]["fps"] = request.fps
             self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
-            if score < OD_THRESH:
-                print("Object Detection Score below threshold")
-                change_fps = True
-
             if self.current_load > BW:
-                print("Server is overloaded")
-                change_fps = True
-            
-            if change_fps:
                 new_fps = self.calculate_adjusted_fps(request.client_id)
 
         frame = pickle.loads(request.frame_data)
@@ -87,9 +80,16 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         bboxes, score = self.detector.detect(frame)
 
+        if int(score) < OD_THRESH:
+            print(score)
+            print("Object Detection Score below threshold")
+            new_fps = self.calculate_adjusted_fps(request.client_id)
+
+        print("new fps: ", new_fps)
+
         res = Response(
             bboxes=bboxes,
-            signal=new_fps
+            signal=int(new_fps)
         )
         with self.lock:
             self.current_load -= len(request.frame_data)
