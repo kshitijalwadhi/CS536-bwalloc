@@ -33,10 +33,19 @@ class Client:
         vs = FileVideoStream('sample.mp4').start()
         size = 224
         scaling_factor = 4
+        roi = None
+        use_roi = False
         try:
             for img in yield_frames_from_video(vs, mirror=True):
+                if roi is not None and use_roi:
+                    # Process only within the ROI if defined
+                    x, y, w, h = roi
+                    img_roi = img[y:y+h, x:x+w]
+                else:
+                    img_roi = img
+
                 # compress frame
-                resized_img = cv2.resize(img, (size//scaling_factor, size//scaling_factor))
+                resized_img = cv2.resize(img_roi, (size//scaling_factor, size//scaling_factor))
                 jpg = cv2.imencode('.jpg', resized_img)[1]
                 # send to server for object detection
                 frame_data = pickle.dumps(jpg)
@@ -50,6 +59,17 @@ class Client:
 
                 # parse detection result and draw on the frame
                 result = pickle.loads(resp.bboxes.data)
+
+                # calculate ROI
+                if result and use_roi:
+                    x_coords = [bbox[1] for bbox in result]
+                    y_coords = [bbox[2] for bbox in result]
+                    widths = [bbox[3] for bbox in result]
+                    heights = [bbox[4] for bbox in result]
+                    x_min, x_max = min(x_coords), max(x + w for x, w in zip(x_coords, widths))
+                    y_min, y_max = min(y_coords), max(y + h for y, h in zip(y_coords, heights))
+                    roi = (x_min, y_min, x_max - x_min, y_max - y_min)
+
                 display = draw_result(img, result, scale=float(img.shape[0])/size)
                 cv2.imshow('Video Frame', display)
 
