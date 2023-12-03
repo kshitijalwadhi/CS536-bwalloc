@@ -70,7 +70,10 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             self.current_num_clients += 1
             self.connected_clients[request.client_id]["fps"] = request.fps
             self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
+            
+            print("current clients: ", self.current_num_clients)
             if self.current_load > BW:
+                print("Max Bandwidth Exceeded")
                 new_fps = self.calculate_adjusted_fps(request.client_id)
 
         frame = pickle.loads(request.frame_data)
@@ -89,8 +92,10 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         res = Response(
             bboxes=bboxes,
-            signal=int(new_fps)
+            signal=0,
+            fps=int(new_fps)
         )
+
         with self.lock:
             self.current_load -= len(request.frame_data)
             self.current_num_clients -= 1

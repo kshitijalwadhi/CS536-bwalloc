@@ -69,8 +69,11 @@ def send_video(server_address, client_fps, client_id):
             display = draw_result(img, result, scale=float(img.shape[0])/size)
             cv2.imshow('Video Frame', display)
 
-            client_fps = resp.signal
-            client_fps += 5
+            resp_fps = resp.fps
+
+            client_fps = resp_fps if resp_fps < 100 else client_fps
+            if resp_fps < 95:
+                client_fps += 5
             print(client_fps)
             wait_time = int(1000/client_fps)
             cv2.waitKey(wait_time)
