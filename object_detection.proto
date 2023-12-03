@@ -11,6 +11,7 @@ service Detector {
 message Response {
   BBoxes bboxes = 1;
   int32 signal = 2;
+  int32 fps = 3;
 }
 
 message Request {
