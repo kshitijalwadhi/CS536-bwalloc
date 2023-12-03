@@ -10,29 +10,12 @@ import cv2
 import pickle
 
 from utils.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, BW
-from time import sleep
+
+from object_detector import ObjectDetector
 
 import random
 
 from threading import Lock
-
-
-class ObjectDetector:
-    def detect(self, frame) -> BBoxes:
-        dummy_output = []
-
-        for _ in range(random.randint(1, 5)):
-            dummy_output.append(
-                ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
-            )
-        res = BBoxes(data=pickle.dumps(dummy_output))
-        if random.random() < 0.8:
-            score = random.uniform(85, 100)
-        else:
-            score = random.uniform(0, 85)
-        print(score)
-        time.sleep(0.2)
-        return res, score
 
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
@@ -43,6 +26,8 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         self.current_num_clients = 0
         self.lock = Lock()
         self.connected_clients = {}
+
+        self.pending_client_updates = {}  # client_id -> fps
 
     def init_client(self, request: InitRequest, context):
         with self.lock:
@@ -65,17 +50,20 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
     def detect(self, request: Request, context):
         new_fps = request.fps
-        change_fps = False
         with self.lock:
             self.current_load += len(request.frame_data)
             self.current_num_clients += 1
             self.connected_clients[request.client_id]["fps"] = request.fps
             self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
 
-            print("current clients: ", self.current_num_clients)
             if self.current_load > BW:
                 print("Max Bandwidth Exceeded")
-                new_fps = self.calculate_adjusted_fps(request.client_id)
+                self.calculate_adjusted_fps_bw_exceed()
+
+        if request.client_id in self.pending_client_updates:
+            new_fps = self.pending_client_updates[request.client_id]
+            del self.pending_client_updates[request.client_id]
+            print("new fps from pending_client_updates: ", new_fps)
 
         frame = pickle.loads(request.frame_data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
@@ -85,15 +73,11 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         bboxes, score = self.detector.detect(frame)
 
         if int(score) < OD_THRESH:
-            print(score)
-            print("Object Detection Score below threshold")
-            new_fps = self.calculate_adjusted_fps(request.client_id)
-
-        print("new fps: ", new_fps)
+            print(f"Object Detection Score below threshold: {score}")
+            new_fps = self.calculate_adjusted_fps_od_thresh(request.client_id, new_fps)
 
         res = Response(
             bboxes=bboxes,
-            signal=0,
             fps=int(new_fps)
         )
 
@@ -103,7 +87,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         return res
 
-    def calculate_adjusted_fps(self, requesting_client_id):
+    def calculate_adjusted_fps_bw_exceed(self):
         total_fps = 0
         max_fps = 0
         max_fps_client_id = None
@@ -114,11 +98,12 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 max_fps = info["fps"]
                 max_fps_client_id = client_id
 
-        if max_fps_client_id == requesting_client_id:
-            return 0
+        average_fps = total_fps / (2 * len(self.connected_clients))
+        self.pending_client_updates[max_fps_client_id] = average_fps
 
-        average_fps = total_fps / len(self.connected_clients)
-        return average_fps if max_fps_client_id is not None else 0
+    def calculate_adjusted_fps_od_thresh(self, client_id, current_fps):
+        # TODO: calculate adjusted fps based on logic for the case when OD score is below threshold
+        return current_fps
 
 
 def serve(detector):

@@ -1,5 +1,4 @@
 import argparse
-from imutils.video import FPS
 from imutils.video import FileVideoStream
 import time
 import grpc
@@ -9,7 +8,7 @@ import cv2
 
 import object_detection_pb2_grpc
 
-from object_detection_pb2 import Request, Response, BBoxes, InitRequest, InitResponse, CloseRequest, CloseResponse
+from object_detection_pb2 import Request, InitRequest, CloseRequest
 
 from utils.utils import draw_result, yield_frames_from_video
 
@@ -56,8 +55,8 @@ class Client:
 
                 resp_fps = resp.fps
 
-                self.fps = resp_fps + 5
-                print(self.fps)
+                self.fps = resp_fps + 3
+                print("New FPS: ", self.fps)
                 wait_time = int(1000/self.fps)
                 cv2.waitKey(wait_time)
         except grpc._channel._Rendezvous as err:
