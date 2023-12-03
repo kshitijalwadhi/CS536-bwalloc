@@ -11,6 +11,7 @@ import object_detection_pb2_grpc
 from object_detection_pb2 import Request, InitRequest, CloseRequest
 
 from utils.utils import draw_result, yield_frames_from_video
+from utils.constants import MAX_FPS
 
 
 class Client:
@@ -34,7 +35,7 @@ class Client:
         size = 224
         scaling_factor = 4
         roi = None
-        use_roi = False
+        use_roi = True
         try:
             for img in yield_frames_from_video(vs, mirror=True):
                 if roi is not None and use_roi:
@@ -75,7 +76,7 @@ class Client:
 
                 resp_fps = resp.fps
 
-                self.fps = resp_fps + 3
+                self.fps = resp_fps + 3 if resp_fps < MAX_FPS else MAX_FPS
                 print("New FPS: ", self.fps)
                 wait_time = int(1000/self.fps)
                 cv2.waitKey(wait_time)
