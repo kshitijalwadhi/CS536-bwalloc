@@ -11,6 +11,9 @@ service Detector {
 message Response {
   BBoxes bboxes = 1;
   int32 fps = 2;
+  bool roi = 3;
+  bool increase_quality = 4;
+  bool decrease_quality = 5;
 }
 
 message Request {
