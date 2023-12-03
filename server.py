@@ -56,6 +56,21 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             self.connected_clients[request.client_id]["fps"] = request.fps
             self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
 
+        frame = pickle.loads(request.frame_data)
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+
+        frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
+
+        bboxes, score = self.detector.detect(frame)
+
+        increase_quality_flag = False
+        decrease_quality_flag = False
+
+        if int(score) < OD_THRESH:
+            print(f"Object Detection Score below threshold: {score}")
+            increase_quality_flag = True
+
+        with self.lock:
             if self.current_load > BW:
                 print("Max Bandwidth Exceeded")
                 self.calculate_adjusted_fps_bw_exceed()
@@ -64,21 +79,16 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             new_fps = self.pending_client_updates[request.client_id]
             del self.pending_client_updates[request.client_id]
             print("new fps from pending_client_updates: ", new_fps)
+            decrease_quality_flag = True
 
-        frame = pickle.loads(request.frame_data)
-        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-
-        frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
-
-        bboxes, score = self.detector.detect(frame)
-
-        if int(score) < OD_THRESH:
-            print(f"Object Detection Score below threshold: {score}")
-            new_fps = self.calculate_adjusted_fps_od_thresh(request.client_id, new_fps)
+        if increase_quality_flag and decrease_quality_flag:
+            increase_quality_flag = False
 
         res = Response(
             bboxes=bboxes,
-            fps=int(new_fps)
+            fps=int(new_fps),
+            increase_quality=increase_quality_flag,
+            decrease_quality=decrease_quality_flag,
         )
 
         with self.lock:
@@ -100,10 +110,6 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         average_fps = total_fps / (2 * len(self.connected_clients))
         self.pending_client_updates[max_fps_client_id] = average_fps
-
-    def calculate_adjusted_fps_od_thresh(self, client_id, current_fps):
-        # TODO: calculate adjusted fps based on logic for the case when OD score is below threshold
-        return current_fps
 
 
 def serve(detector):

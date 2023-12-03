@@ -11,7 +11,7 @@ import object_detection_pb2_grpc
 from object_detection_pb2 import Request, InitRequest, CloseRequest
 
 from utils.utils import draw_result, yield_frames_from_video
-from utils.constants import MAX_FPS
+from utils.constants import MAX_FPS, MAX_SCALING_FACTOR, MIN_SCALING_FACTOR
 
 
 class Client:
@@ -26,14 +26,14 @@ class Client:
         print("Client ID: {}".format(self.client_id))
 
         self.fps = client_fps
+        self.size = 224
+        self.scaling_factor = 4
 
     def send_video(self):
         print("Sending video to server")
         time.sleep(1.0)
 
         vs = FileVideoStream('sample.mp4').start()
-        size = 224
-        scaling_factor = 4
         roi = None
         use_roi = True
         try:
@@ -46,7 +46,7 @@ class Client:
                     img_roi = img
 
                 # compress frame
-                resized_img = cv2.resize(img_roi, (size//scaling_factor, size//scaling_factor))
+                resized_img = cv2.resize(img_roi, (self.size//self.scaling_factor, self.size//self.scaling_factor))
                 jpg = cv2.imencode('.jpg', resized_img)[1]
                 # send to server for object detection
                 frame_data = pickle.dumps(jpg)
@@ -57,6 +57,12 @@ class Client:
                 )
 
                 resp = self.stub.detect(req)
+
+                if resp.increase_quality == True:
+                    self.scaling_factor = max(MIN_SCALING_FACTOR, self.scaling_factor - 1)
+
+                if resp.decrease_quality == True:
+                    self.scaling_factor = min(MAX_SCALING_FACTOR, self.scaling_factor + 1)
 
                 # parse detection result and draw on the frame
                 result = pickle.loads(resp.bboxes.data)
@@ -71,7 +77,7 @@ class Client:
                     y_min, y_max = min(y_coords), max(y + h for y, h in zip(y_coords, heights))
                     roi = (x_min, y_min, x_max - x_min, y_max - y_min)
 
-                display = draw_result(img, result, scale=float(img.shape[0])/size)
+                display = draw_result(img, result, scale=float(img.shape[0])/self.size)
                 cv2.imshow('Video Frame', display)
 
                 resp_fps = resp.fps
