@@ -26,11 +26,12 @@ class ObjectDetector:
                 ['rectangle', random.randint(0, IMG_SIZE), random.randint(0, IMG_SIZE), random.randint(10, 50), random.randint(10, 50), random.random()]
             )
         res = BBoxes(data=pickle.dumps(dummy_output))
-        if random.random() < 0.8: 
+        if random.random() < 0.8:
             score = random.uniform(85, 100)
         else:
             score = random.uniform(0, 85)
         print(score)
+        time.sleep(0.2)
         return res, score
 
 
@@ -70,7 +71,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             self.current_num_clients += 1
             self.connected_clients[request.client_id]["fps"] = request.fps
             self.connected_clients[request.client_id]["size_each_frame"] = len(request.frame_data)
-            
+
             print("current clients: ", self.current_num_clients)
             if self.current_load > BW:
                 print("Max Bandwidth Exceeded")
@@ -101,7 +102,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             self.current_num_clients -= 1
 
         return res
-    
+
     def calculate_adjusted_fps(self, requesting_client_id):
         total_fps = 0
         max_fps = 0
