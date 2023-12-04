@@ -10,8 +10,8 @@ import object_detection_pb2_grpc
 
 from object_detection_pb2 import Request, InitRequest, CloseRequest
 
-from utils.utils import draw_result, yield_frames_from_video
-from utils.constants import MAX_FPS, MAX_SCALING_FACTOR, MIN_SCALING_FACTOR
+from utilities.helpers import draw_result, yield_frames_from_video
+from utilities.constants import MAX_FPS, MAX_SCALING_FACTOR, MIN_SCALING_FACTOR
 
 
 class Client:

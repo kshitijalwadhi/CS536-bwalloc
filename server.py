@@ -9,7 +9,7 @@ import time
 import cv2
 import pickle
 
-from utils.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, BW
+from utilities.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, BW
 
 from object_detector import ObjectDetector
 
