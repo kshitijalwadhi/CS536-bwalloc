@@ -35,7 +35,7 @@ class Client:
 
         vs = FileVideoStream('sample.mp4').start()
         roi = None
-        use_roi = True
+        use_roi = False
         try:
             for img in yield_frames_from_video(vs, mirror=True):
                 if roi is not None and use_roi:
@@ -77,9 +77,11 @@ class Client:
                     y_min, y_max = min(y_coords), max(y + h for y, h in zip(y_coords, heights))
                     roi = (x_min, y_min, x_max - x_min, y_max - y_min)
 
-                display = draw_result(img, result, scale=float(img.shape[0])/self.size)
-                cv2.imshow('Video Frame', display)
-
+                if result:
+                    display = draw_result(img, result, scale=float(img.shape[0])/self.size)
+                    cv2.imshow('Video Frame', display)
+                else:
+                    cv2.imshow('Video Frame', img)
                 resp_fps = resp.fps
 
                 self.fps = resp_fps + 3 if resp_fps < MAX_FPS else MAX_FPS
