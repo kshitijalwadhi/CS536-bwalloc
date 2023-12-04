@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"\x82\x01\n\x08Response\x12(\n\x06\x62\x62oxes\x18\x01 \x01(\x0b\x32\x18.object_detection.BBoxes\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\x12\x0b\n\x03roi\x18\x03 \x01(\x08\x12\x18\n\x10increase_quality\x18\x04 \x01(\x08\x12\x18\n\x10\x64\x65\x63rease_quality\x18\x05 \x01(\x08\"=\n\x07Request\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\x12\x11\n\tclient_id\x18\x03 \x01(\x05\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"\r\n\x0bInitRequest\"!\n\x0cInitResponse\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"!\n\x0c\x43loseRequest\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"\x0f\n\rCloseResponse2\xf4\x01\n\x08\x44\x65tector\x12\x41\n\x06\x64\x65tect\x12\x19.object_detection.Request\x1a\x1a.object_detection.Response\"\x00\x12N\n\x0binit_client\x12\x1d.object_detection.InitRequest\x1a\x1e.object_detection.InitResponse\"\x00\x12U\n\x10\x63lose_connection\x12\x1e.object_detection.CloseRequest\x1a\x1f.object_detection.CloseResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16object_detection.proto\x12\x10object_detection\"\x82\x01\n\x08Response\x12(\n\x06\x62\x62oxes\x18\x01 \x01(\x0b\x32\x18.object_detection.BBoxes\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\x12\x0b\n\x03roi\x18\x03 \x01(\x08\x12\x18\n\x10increase_quality\x18\x04 \x01(\x08\x12\x18\n\x10\x64\x65\x63rease_quality\x18\x05 \x01(\x08\"=\n\x07Request\x12\x12\n\nframe_data\x18\x01 \x01(\x0c\x12\x0b\n\x03\x66ps\x18\x02 \x01(\x05\x12\x11\n\tclient_id\x18\x03 \x01(\x05\"\x16\n\x06\x42\x42oxes\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"\x1a\n\x0bInitRequest\x12\x0b\n\x03\x66ps\x18\x01 \x01(\x05\"!\n\x0cInitResponse\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"!\n\x0c\x43loseRequest\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"\x0f\n\rCloseResponse2\xf4\x01\n\x08\x44\x65tector\x12\x41\n\x06\x64\x65tect\x12\x19.object_detection.Request\x1a\x1a.object_detection.Response\"\x00\x12N\n\x0binit_client\x12\x1d.object_detection.InitRequest\x1a\x1e.object_detection.InitResponse\"\x00\x12U\n\x10\x63lose_connection\x12\x1e.object_detection.CloseRequest\x1a\x1f.object_detection.CloseResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -27,13 +27,13 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_BBOXES']._serialized_start=240
   _globals['_BBOXES']._serialized_end=262
   _globals['_INITREQUEST']._serialized_start=264
-  _globals['_INITREQUEST']._serialized_end=277
-  _globals['_INITRESPONSE']._serialized_start=279
-  _globals['_INITRESPONSE']._serialized_end=312
-  _globals['_CLOSEREQUEST']._serialized_start=314
-  _globals['_CLOSEREQUEST']._serialized_end=347
-  _globals['_CLOSERESPONSE']._serialized_start=349
-  _globals['_CLOSERESPONSE']._serialized_end=364
-  _globals['_DETECTOR']._serialized_start=367
-  _globals['_DETECTOR']._serialized_end=611
+  _globals['_INITREQUEST']._serialized_end=290
+  _globals['_INITRESPONSE']._serialized_start=292
+  _globals['_INITRESPONSE']._serialized_end=325
+  _globals['_CLOSEREQUEST']._serialized_start=327
+  _globals['_CLOSEREQUEST']._serialized_end=360
+  _globals['_CLOSERESPONSE']._serialized_start=362
+  _globals['_CLOSERESPONSE']._serialized_end=377
+  _globals['_DETECTOR']._serialized_start=380
+  _globals['_DETECTOR']._serialized_end=624
 # @@protoc_insertion_point(module_scope)

@@ -24,7 +24,7 @@ message Request {
 
 message BBoxes { bytes data = 1; }
 
-message InitRequest {}
+message InitRequest { int32 fps = 1;}
 
 message InitResponse { int32 client_id = 1; }
 
