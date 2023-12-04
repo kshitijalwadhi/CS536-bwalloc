@@ -9,7 +9,7 @@ import time
 import cv2
 import pickle
 
-from utilities.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, BW
+from utilities.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, MAX_BW
 
 from object_detector import ObjectDetector
 
@@ -71,8 +71,9 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             increase_quality_flag = True
 
         with self.lock:
-            if self.current_load > BW:
+            if self.current_load > MAX_BW:
                 print("Max Bandwidth Exceeded")
+                print(f"Current Load: {self.current_load}")
                 self.calculate_adjusted_fps_bw_exceed()
 
         if request.client_id in self.pending_client_updates:
