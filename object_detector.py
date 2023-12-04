@@ -31,4 +31,4 @@ class ObjectDetector:
                 [class_label, r[0], r[1], r[2], r[3], conf[i]]
             )
         res = BBoxes(data=pickle.dumps(output))
-        return res, score
+        return res, score*100
