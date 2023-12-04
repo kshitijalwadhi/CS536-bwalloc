@@ -21,7 +21,7 @@ class Client:
         self.channel = grpc.insecure_channel(server_address)
         self.stub = object_detection_pb2_grpc.DetectorStub(self.channel)
 
-        req = InitRequest()
+        req = InitRequest(fps=client_fps)
         resp = self.stub.init_client(req)
         self.client_id = resp.client_id
 
@@ -96,7 +96,7 @@ class Client:
                 time_elapsed = (t2 - t1) * 1000
 
                 if (time_elapsed > 1000/self.fps):
-                    self.fps = int(1000/time_elapsed)
+                    #self.fps = int(1000/time_elapsed)
                     cv2.waitKey(1)
                 else:
                     cv2.waitKey(int(1000/self.fps - time_elapsed))
