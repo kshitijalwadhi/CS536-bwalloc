@@ -1,27 +1,34 @@
 from object_detection_pb2 import BBoxes
-import random
 from utilities.constants import IMG_SIZE
 import pickle
-import time
 
-import torch
+from ultralytics import YOLO  # docs: https://docs.ultralytics.com/modes/predict/
 
 
 class ObjectDetector:
     def __init__(self):
-        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+        self.model = YOLO('yolov8n')
 
     def detect(self, frame) -> BBoxes:
         output = []
-        result = self.model(frame)
 
-        if len(result.pandas().xyxy[0]) == 0:
-            return BBoxes(data=pickle.dumps(output)), 0
+        results = self.model(frame)
 
-        score = max(result.pandas().xyxy[0].confidence)
-        for _, row in result.pandas().xyxy[0].iterrows():
+        result = results[0]
+
+        labels_map = result.names
+
+        boxes = result.boxes.cpu().numpy()
+        conf = result.boxes.conf.cpu().numpy()
+
+        score = max(conf) if len(conf) > 0 else 0
+
+        for i, box in enumerate(boxes):
+            class_label_id = box.cls[0]
+            class_label = labels_map[class_label_id]
+            r = box.xyxy[0].astype(int)
             output.append(
-                [row['name'], row['xmin'], row['ymin'], row['xmax'],  row['ymax'], row['confidence']]
+                [class_label, r[0], r[1], r[2], r[3], conf[i]]
             )
         res = BBoxes(data=pickle.dumps(output))
         return res, score

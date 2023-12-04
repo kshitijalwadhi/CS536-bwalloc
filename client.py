@@ -84,7 +84,7 @@ class Client:
                     cv2.imshow('Video Frame', img)
                 resp_fps = resp.fps
 
-                self.fps = resp_fps + 3 if resp_fps < MAX_FPS else MAX_FPS
+                self.fps = resp_fps + 15 if resp_fps < MAX_FPS else MAX_FPS
                 print("New FPS: ", self.fps)
                 wait_time = int(1000/self.fps)
                 cv2.waitKey(wait_time)
