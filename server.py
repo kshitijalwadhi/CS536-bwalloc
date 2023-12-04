@@ -69,8 +69,10 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         target_fps = self.connected_clients[request.client_id]["requested_fps"]
 
-        fps_factor = self.connected_clients[request.client_id]["fps"] / target_fps
-        print(fps_factor)
+        fps_factor = request.fps / target_fps
+        print(f"fps factor: {fps_factor}")
+        print(f"target_fps: {target_fps}")
+        print(f"request.fps: {request.fps}")
 
         if int(score) < OD_THRESH:
             print(f"Object Detection Score below threshold: {score}")
@@ -81,6 +83,9 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 print("Max Bandwidth Exceeded")
                 print(f"Current Load: {self.current_load}")
                 self.calculate_adjusted_fps_bw_exceed()
+                if fps_factor > 1.5:
+                    print("here")
+                    self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
             
             if fps_factor < 0.5:
                 self.pending_client_updates[request.client_id] = request.fps + 0.1*target_fps
