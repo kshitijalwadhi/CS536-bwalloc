@@ -64,10 +64,10 @@ class Client:
                 resp = self.stub.detect(req)
 
                 if resp.increase_quality == True:
-                    self.scaling_factor = max(MIN_SCALING_FACTOR, self.scaling_factor - 1)
+                    self.scaling_factor = max(MIN_SCALING_FACTOR, self.scaling_factor - 2)
 
                 if resp.decrease_quality == True:
-                    self.scaling_factor = min(MAX_SCALING_FACTOR, self.scaling_factor + 1)
+                    self.scaling_factor = min(MAX_SCALING_FACTOR, self.scaling_factor + 2)
 
                 # parse detection result and draw on the frame
                 result = pickle.loads(resp.bboxes.data)
