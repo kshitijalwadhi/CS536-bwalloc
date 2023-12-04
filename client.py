@@ -13,6 +13,8 @@ from object_detection_pb2 import Request, InitRequest, CloseRequest
 from utilities.helpers import draw_result, yield_frames_from_video
 from utilities.constants import MAX_FPS, MAX_SCALING_FACTOR, MIN_SCALING_FACTOR
 
+import time
+
 
 class Client:
     def __init__(self, server_address, client_fps):
@@ -38,6 +40,9 @@ class Client:
         use_roi = False
         try:
             for img in yield_frames_from_video(vs, mirror=True):
+
+                t1 = time.time()
+
                 if roi is not None and use_roi:
                     # Process only within the ROI if defined
                     x, y, w, h = roi
@@ -85,9 +90,19 @@ class Client:
                 resp_fps = resp.fps
 
                 self.fps = resp_fps + int(0.1*MAX_FPS) if resp_fps < MAX_FPS else MAX_FPS
+
+                t2 = time.time()
+
+                time_elapsed = (t2 - t1) * 1000
+
+                if (time_elapsed > 1000/self.fps):
+                    self.fps = int(1000/time_elapsed)
+                    cv2.waitKey(1)
+                else:
+                    cv2.waitKey(int(1000/self.fps - time_elapsed))
+
                 print("New FPS: ", self.fps)
-                wait_time = int(1000/self.fps)
-                cv2.waitKey(wait_time)
+                print("Current scaling factor: ", self.scaling_factor)
         except grpc._channel._Rendezvous as err:
             print(err)
         except KeyboardInterrupt:
