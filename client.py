@@ -68,11 +68,11 @@ class Client:
                 result = pickle.loads(resp.bboxes.data)
 
                 # calculate ROI
-                if result and use_roi:
+                if result and use_roi and len(result) > 4:
                     x_coords = [bbox[1] for bbox in result]
                     y_coords = [bbox[2] for bbox in result]
-                    widths = [bbox[3] for bbox in result]
-                    heights = [bbox[4] for bbox in result]
+                    heights = [bbox[3] for bbox in result]
+                    widths = [bbox[4] for bbox in result]
                     x_min, x_max = min(x_coords), max(x + w for x, w in zip(x_coords, widths))
                     y_min, y_max = min(y_coords), max(y + h for y, h in zip(y_coords, heights))
                     roi = (x_min, y_min, x_max - x_min, y_max - y_min)
