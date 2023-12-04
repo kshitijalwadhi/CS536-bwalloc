@@ -35,6 +35,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             while client_id in self.connected_clients:
                 client_id = random.randint(1, MAX_CAMERAS)
             self.connected_clients[client_id] = {
+                "requested_fps": request.fps,
                 "fps": 0,
                 "size_each_frame": 0,
             }
@@ -66,6 +67,11 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         increase_quality_flag = False
         decrease_quality_flag = False
 
+        target_fps = self.connected_clients[request.client_id]["requested_fps"]
+
+        fps_factor = self.connected_clients[request.client_id]["fps"] / target_fps
+        print(fps_factor)
+
         if int(score) < OD_THRESH:
             print(f"Object Detection Score below threshold: {score}")
             increase_quality_flag = True
@@ -75,6 +81,9 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 print("Max Bandwidth Exceeded")
                 print(f"Current Load: {self.current_load}")
                 self.calculate_adjusted_fps_bw_exceed()
+            
+            if fps_factor < 0.5:
+                self.pending_client_updates[request.client_id] = request.fps + 0.1*target_fps
 
         if request.client_id in self.pending_client_updates:
             new_fps = self.pending_client_updates[request.client_id]
