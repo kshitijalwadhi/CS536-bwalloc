@@ -83,8 +83,8 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 print("Max Bandwidth Exceeded")
                 print(f"Current Load: {self.current_load}")
                 self.calculate_adjusted_fps_bw_exceed()
+
                 if fps_factor > 1.5:
-                    print("here")
                     self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
             
             if fps_factor < 0.5:
