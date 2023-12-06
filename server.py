@@ -53,7 +53,6 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         return CloseResponse()
 
     def solve_bandwidth_allocation(self):
-        # Define the optimization problem
         prob = LpProblem("BandwidthAllocation", LpMaximize)
 
         # Decision variables: fps for each client
@@ -67,14 +66,11 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         prob += lpSum([fps_vars[client_id] / requested_fps[client_id] * accuracy[client_id]
                        for client_id in self.connected_clients])
 
-        # Bandwidth constraint
         prob += lpSum([fps_vars[client_id] * self.connected_clients[client_id]['size_each_frame']
                        for client_id in self.connected_clients]) <= MAX_BW
 
-        # Solve the problem
         prob.solve()
-
-        # Update fps_i for each client based on the solution
+        
         for client_id in fps_vars:
             if fps_vars[client_id].varValue is not None:
                 self.pending_client_updates[client_id] = fps_vars[client_id].varValue
