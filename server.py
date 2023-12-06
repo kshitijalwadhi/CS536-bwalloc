@@ -17,6 +17,9 @@ import random
 
 from threading import Lock
 
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum
+import numpy as np
+
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
     def __init__(self, detector=None) -> None:
@@ -48,6 +51,33 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             if request.client_id in self.connected_clients:
                 del self.connected_clients[request.client_id]
         return CloseResponse()
+
+    def solve_bandwidth_allocation(self):
+        # Define the optimization problem
+        prob = LpProblem("BandwidthAllocation", LpMaximize)
+
+        # Decision variables: fps for each client
+        fps_vars = {client_id: LpVariable(f'fps_{client_id}', lowBound=0, upBound=100, cat='Integer')
+                    for client_id in self.connected_clients}
+
+        # Objective function
+        requested_fps = {client_id: client['requested_fps'] for client_id, client in self.connected_clients.items()}
+        accuracy = {client_id: np.mean(self.past_scores[client_id]) if self.past_scores[client_id] else 0
+                    for client_id in self.connected_clients}
+        prob += lpSum([fps_vars[client_id] / requested_fps[client_id] * accuracy[client_id]
+                       for client_id in self.connected_clients])
+
+        # Bandwidth constraint
+        prob += lpSum([fps_vars[client_id] * self.connected_clients[client_id]['size_each_frame']
+                       for client_id in self.connected_clients]) <= MAX_BW
+
+        # Solve the problem
+        prob.solve()
+
+        # Update fps_i for each client based on the solution
+        for client_id in fps_vars:
+            if fps_vars[client_id].varValue is not None:
+                self.pending_client_updates[client_id] = fps_vars[client_id].varValue
 
     def detect(self, request: Request, context):
         new_fps = request.fps
@@ -82,7 +112,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             if self.current_load > MAX_BW:
                 print("Max Bandwidth Exceeded")
                 print(f"Current Load: {self.current_load}")
-                self.calculate_adjusted_fps_bw_exceed()
+                #self.calculate_adjusted_fps_bw_exceed()
 
                 if fps_factor > 1.5:
                     self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
