@@ -66,12 +66,21 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         requested_fps = {client_id: client['fps'] for client_id, client in self.connected_clients.items()}
         accuracy = {client_id: np.mean(self.past_scores[client_id][-10:]) if self.past_scores[client_id] else 0
                     for client_id in self.connected_clients}
-        prob += lpSum([fps_vars[client_id]  * accuracy[client_id] / requested_fps[client_id]
-                       for client_id in self.connected_clients])
+                    
+        prob += lpSum([fps_vars[client_id] * accuracy[client_id] / requested_fps[client_id] 
+                    for client_id in self.connected_clients]) <= MAX_BW
 
-        # Bandwidth constraint
-        prob += lpSum([fps_vars[client_id] * self.connected_clients[client_id]['size_each_frame']
-                       for client_id in self.connected_clients]) <= MAX_BW
+        # # Bandwidth constraint
+        # prob += lpSum([fps_vars[client_id] * self.connected_clients[client_id]['size_each_frame']
+        #                for client_id in self.connected_clients]) <= MAX_BW
+
+        for client_id in self.connected_clients:
+            prob += fps_vars[client_id] <= 100
+
+        #each performance min capped
+        for client_id in self.connected_clients:
+            #prob += fps_vars[client_id] * accuracy[client_id] / requested_fps[client_id] >= MIN_THRESHOLD_EACH
+            prob += fps_vars[client_id] >= 10
 
         # Solve the problem
         prob.solve(PULP_CBC_CMD(msg=0))
