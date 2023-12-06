@@ -29,6 +29,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         self.current_num_clients = 0
         self.lock = Lock()
         self.connected_clients = {}
+        self.past_scores = {}
 
         self.pending_client_updates = {}  # client_id -> fps
 
@@ -42,6 +43,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 "fps": 0,
                 "size_each_frame": 0,
             }
+            self.past_scores[client_id] = []
         return InitResponse(
             client_id=client_id,
         )
@@ -61,10 +63,10 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                     for client_id in self.connected_clients}
 
         # Objective function
-        requested_fps = {client_id: client['requested_fps'] for client_id, client in self.connected_clients.items()}
-        accuracy = {client_id: np.mean(self.past_scores[client_id]) if self.past_scores[client_id] else 0
+        requested_fps = {client_id: client['fps'] for client_id, client in self.connected_clients.items()}
+        accuracy = {client_id: np.mean(self.past_scores[client_id][-10:]) if self.past_scores[client_id] else 0
                     for client_id in self.connected_clients}
-        prob += lpSum([fps_vars[client_id] / requested_fps[client_id] * accuracy[client_id]
+        prob += lpSum([fps_vars[client_id]  * accuracy[client_id] / requested_fps[client_id]
                        for client_id in self.connected_clients])
 
         # Bandwidth constraint
@@ -93,6 +95,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         frame = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
 
         bboxes, score = self.detector.detect(frame)
+        self.past_scores[request.client_id].append(score)
 
         increase_quality_flag = False
         decrease_quality_flag = False
@@ -112,7 +115,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             if self.current_load > MAX_BW:
                 print("Max Bandwidth Exceeded")
                 print(f"Current Load: {self.current_load}")
-                #self.calculate_adjusted_fps_bw_exceed()
+                self.solve_bandwidth_allocation()
 
                 if fps_factor > 1.5:
                     self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
