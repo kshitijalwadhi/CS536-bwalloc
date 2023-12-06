@@ -17,7 +17,7 @@ import random
 
 from threading import Lock
 
-from pulp import LpMaximize, LpProblem, LpVariable, lpSum
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD
 import numpy as np
 
 
@@ -74,7 +74,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                        for client_id in self.connected_clients]) <= MAX_BW
 
         # Solve the problem
-        prob.solve()
+        prob.solve(PULP_CBC_CMD(msg=0))
 
         # Update fps_i for each client based on the solution
         for client_id in fps_vars:
