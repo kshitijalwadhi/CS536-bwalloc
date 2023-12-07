@@ -14,11 +14,14 @@ from utilities.constants import MAX_CAMERAS, OD_THRESH, IMG_SIZE, MAX_BW
 from object_detector import ObjectDetector
 
 import random
-
+import threading
 from threading import Lock
 
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD, LpStatus
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 class Detector(object_detection_pb2_grpc.DetectorServicer):
@@ -32,6 +35,8 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         self.past_scores = {}
 
         self.pending_client_updates = {}  # client_id -> fps
+        self.server_start_time = time.time()
+        self.start_times = {}
 
     def init_client(self, request: InitRequest, context):
         with self.lock:
@@ -44,6 +49,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 "size_each_frame": 0,
             }
             self.past_scores[client_id] = []
+            self.start_times[client_id] = time.time() - self.server_start_time
         return InitResponse(
             client_id=client_id,
         )
@@ -53,6 +59,46 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             if request.client_id in self.connected_clients:
                 del self.connected_clients[request.client_id]
         return CloseResponse()
+
+    def plot_metrics(self):
+        # Ensure this function is called periodically in the server's main loop or a separate thread.
+        print("here")
+        try:
+            # Create a figure with two subplots
+            plt.figure(figsize=(12, 6))
+
+            # Plotting Object Detection Scores
+            plt.subplot(1, 2, 1)
+            for client_id, scores in self.past_scores.items():
+                if scores:
+                    relative_start_time = self.start_times.get(client_id, 0)
+                    averaged_scores = [np.mean(scores[i:i+25]) for i in range(0, len(scores), 25)]
+                    num_chunks = len(averaged_scores)
+                    time_offsets = [relative_start_time + i for i in range(num_chunks)]
+                    plt.plot(time_offsets, averaged_scores, label=f'Client {client_id}')
+            plt.title('Object Detection Scores')
+            plt.xlabel('Time')
+            plt.ylabel('Score')
+            plt.legend()
+
+            # # Plotting Probability of Dropped Packets
+            # plt.subplot(1, 2, 2)
+            # client_ids = list(self.prob_dropping.keys())
+            # probabilities = list(self.prob_dropping.values())
+            # plt.bar(client_ids, probabilities, color='blue')
+            # plt.title('Probability of Dropped Packets')
+            # plt.xlabel('Client ID')
+            # plt.ylabel('Probability')
+            # plt.xticks(client_ids)
+
+            # plt.tight_layout()
+            
+            # Save the plot to a file
+            plt.savefig('./server_metrics.png')
+            print("Plot saved to 'server_metrics.png'")
+            plt.close()
+        except Exception as e:
+            print(f"Error occurred during plotting: {e}")
 
     def solve_bandwidth_allocation(self):
         # Define the optimization problem
@@ -127,11 +173,11 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
                 print(f"Current Load: {self.current_load}")
                 self.solve_bandwidth_allocation()
 
-                if fps_factor > 1.5:
-                    self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
+            #     if fps_factor > 1.5:
+            #         self.pending_client_updates[request.client_id] = request.fps - fps_factor*10
             
-            if fps_factor < 0.5:
-                self.pending_client_updates[request.client_id] = request.fps + 0.1*target_fps
+            # if fps_factor < 0.5:
+            #     self.pending_client_updates[request.client_id] = request.fps + 0.1*target_fps
 
         if request.client_id in self.pending_client_updates:
             new_fps = self.pending_client_updates[request.client_id]
@@ -169,19 +215,32 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
         average_fps = total_fps / (2 * len(self.connected_clients))
         self.pending_client_updates[max_fps_client_id] = average_fps
 
+def start_plotting_thread(server_instance, interval=5):
+    def plot():
+        while not stop_plotting_thread.is_set():
+            time.sleep(interval)
+            server_instance.plot_metrics()
+            
 
-def serve(detector):
+    stop_plotting_thread = threading.Event()
+    plotting_thread = threading.Thread(target=plot)
+    plotting_thread.start()
+    return stop_plotting_thread, plotting_thread
+
+if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_CAMERAS))
-    object_detection_pb2_grpc.add_DetectorServicer_to_server(detector, server)
-    server.add_insecure_port("[::]:50051")
+    od_server = Detector(detector=ObjectDetector())
+    object_detection_pb2_grpc.add_DetectorServicer_to_server(od_server, server)
+    server.add_insecure_port('[::]:50051')
     server.start()
+    stop_event, plotting_thread = start_plotting_thread(od_server)
     print("Server started at port 50051")
     try:
         while True:
             time.sleep(86400)
     except KeyboardInterrupt:
         server.stop(0)
+        stop_event.set()  # Signal the plotting thread to stop
+        plotting_thread.join()  # Wait for the plotting thread to finish
+        server.stop(0)
 
-
-if __name__ == "__main__":
-    serve(Detector(detector=ObjectDetector()))
