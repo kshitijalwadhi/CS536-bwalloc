@@ -17,7 +17,7 @@ import random
 
 from threading import Lock
 
-from pulp import LpMaximize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum, PULP_CBC_CMD, LpStatus
 import numpy as np
 
 
@@ -83,12 +83,13 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
             prob += fps_vars[client_id] >= 10
 
         # Solve the problem
-        prob.solve(PULP_CBC_CMD(msg=0))
+        results = prob.solve(PULP_CBC_CMD(msg=0))
 
         # Update fps_i for each client based on the solution
-        for client_id in fps_vars:
-            if fps_vars[client_id].varValue is not None:
-                self.pending_client_updates[client_id] = fps_vars[client_id].varValue
+        if LpStatus[results] == 'Optimal':
+            for client_id in fps_vars:
+                if fps_vars[client_id].varValue is not None:
+                    self.pending_client_updates[client_id] = fps_vars[client_id].varValue
 
     def detect(self, request: Request, context):
         new_fps = request.fps
