@@ -148,7 +148,7 @@ class Detector(object_detection_pb2_grpc.DetectorServicer):
 
         plt.title('Client Scaling Factor over Time')
         plt.xlabel('Time')
-        plt.ylabel('FPS')
+        plt.ylabel('Scaling Factor')
 
         handles, labels = plt.gca().get_legend_handles_labels()
         fig.legend(handles, labels, loc='lower right')
