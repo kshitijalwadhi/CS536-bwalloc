@@ -10,18 +10,25 @@ service Detector {
 
 message Response {
   BBoxes bboxes = 1;
-  int32 signal = 2;
+  int32 fps = 2;
+  bool roi = 3;
+  bool increase_quality = 4;
+  bool decrease_quality = 5;
 }
 
 message Request {
   bytes frame_data = 1;
   int32 fps = 2;
   int32 client_id = 3;
+  int32 res = 4;
 }
 
 message BBoxes { bytes data = 1; }
 
-message InitRequest {}
+message InitRequest { 
+  int32 fps = 1;
+  int32 res = 2;
+}
 
 message InitResponse { int32 client_id = 1; }
 
