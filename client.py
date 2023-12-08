@@ -59,6 +59,7 @@ class Client:
                     frame_data=frame_data,
                     fps=self.fps,
                     client_id=self.client_id,
+                    res=self.scaling_factor
                 )
 
                 resp = self.stub.detect(req)
