@@ -17,7 +17,7 @@ import time
 
 
 class Client:
-    def __init__(self, server_address, client_fps):
+    def __init__(self, server_address, client_fps, video):
         self.channel = grpc.insecure_channel(server_address)
         self.stub = object_detection_pb2_grpc.DetectorStub(self.channel)
 
@@ -31,11 +31,13 @@ class Client:
         self.size = 224
         self.scaling_factor = 4
 
+        self.video = video
+
     def send_video(self):
         print("Sending video to server")
         time.sleep(1.0)
 
-        vs = FileVideoStream('sample.mp4').start()
+        vs = FileVideoStream(self.video).start()
         roi = None
         use_roi = False
         try:
@@ -97,7 +99,7 @@ class Client:
                 time_elapsed = (t2 - t1) * 1000
 
                 if (time_elapsed > 1000/self.fps):
-                    #self.fps = int(1000/time_elapsed)
+                    # self.fps = int(1000/time_elapsed)
                     cv2.waitKey(1)
                 else:
                     cv2.waitKey(int(1000/self.fps - time_elapsed))
@@ -130,6 +132,12 @@ def get_args() -> argparse.Namespace:
         help="Frame Rate for Client",
         default=30
     )
+    parser.add_argument(
+        "--video",
+        type=str,
+        help="Video to be sent to server",
+        default="data/sample.mp4"
+    )
     return parser.parse_args()
 
 
@@ -137,8 +145,9 @@ if __name__ == "__main__":
     args = get_args()
     server_address = args.server
     client_fps = args.fps
+    video = args.video
 
-    client = Client(server_address, client_fps)
+    client = Client(server_address, client_fps, video)
     client.send_video()
     print("Closing connection")
     client.close_connection()
